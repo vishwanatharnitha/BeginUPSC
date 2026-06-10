@@ -40,6 +40,11 @@ export async function apiFetch(endpoint, options = {}) {
   };
 
   try {
+    console.log(`[API REQUEST] ${config.method || 'GET'} ${url}`, {
+      headers: config.headers,
+      body: config.body ? (typeof config.body === 'string' ? JSON.parse(config.body) : config.body) : null
+    });
+
     const response = await fetch(url, config);
     
     // Read the response content as text
@@ -56,6 +61,14 @@ export async function apiFetch(endpoint, options = {}) {
       data = {};
     }
 
+    console.log(`[API RESPONSE] ${response.status} ${response.ok ? 'OK' : 'ERROR'} from: ${url}`, {
+      data
+    });
+
+    if (!response.ok) {
+      console.error(`[API ERROR] Status: ${response.status} | URL: ${url} | Response text:`, text);
+    }
+
     // Return a compatible Response object wrapper
     return {
       ok: response.ok,
@@ -65,6 +78,7 @@ export async function apiFetch(endpoint, options = {}) {
       text: async () => text
     };
   } catch (error) {
+    console.error(`[API EXCEPTION] Fetch failed for ${url}:`, error);
     // Check if it's a connection / fetch error
     if (error.name === 'TypeError' && error.message.includes('fetch')) {
       throw new Error(

@@ -7,6 +7,48 @@ const apiRoutes = require('./routes/api');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
+let dbInitialized = false;
+
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`[REQUEST] ${new Date().toISOString()} | Method: ${req.method} | URL: ${req.url} | Path: ${req.path}`);
+  next();
+});
+
+// URL normalization middleware to handle Vercel rewrites and path variants
+app.use((req, res, next) => {
+  const originalUrl = req.url;
+  if (req.url.startsWith('/api/index.js')) {
+    req.url = req.url.replace('/api/index.js', '/api');
+  } else if (!req.url.startsWith('/api') && !req.url.startsWith('/health')) {
+    req.url = '/api' + req.url;
+  }
+  
+  if (originalUrl !== req.url) {
+    console.log(`[ROUTE NORMALIZATION] Rewrote URL from ${originalUrl} to ${req.url}`);
+  }
+  next();
+});
+
+// Lazy-initialize database on Vercel
+app.use(async (req, res, next) => {
+  if (!dbInitialized) {
+    try {
+      console.log('[DATABASE] First request received. Initializing connection...');
+      await initDb();
+      dbInitialized = true;
+      console.log('[DATABASE] Lazy-initialization completed successfully.');
+    } catch (err) {
+      console.error('[DATABASE] Lazy-initialization failed:', err.message);
+      return res.status(500).json({
+        message: 'Internal server error during database initialization.',
+        error: err.message
+      });
+    }
+  }
+  next();
+});
+
 // Enable CORS with secure credentials-supported options
 const allowedOrigins = process.env.ALLOWED_ORIGINS
   ? process.env.ALLOWED_ORIGINS.split(',')
@@ -50,6 +92,7 @@ app.use((err, req, res, next) => {
 const startServer = async () => {
   try {
     await initDb();
+    dbInitialized = true;
     app.listen(PORT, () => {
       console.log(`===================================================`);
       console.log(`BeginUPSC Backend running on port: ${PORT}`);
@@ -65,20 +108,6 @@ const startServer = async () => {
 
 if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
   startServer();
-} else {
-  // On Vercel (production serverless), lazy-initialize database connection on the first request
-  let dbInitialized = false;
-  app.use(async (req, res, next) => {
-    if (!dbInitialized) {
-      try {
-        await initDb();
-        dbInitialized = true;
-      } catch (err) {
-        console.error('Failed to lazy initialize database:', err.message);
-      }
-    }
-    next();
-  });
 }
 
 module.exports = app;

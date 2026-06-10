@@ -1,6 +1,24 @@
 {
   "version": 2,
   "cleanUrls": true,
+  "builds": [
+    {
+      "src": "api/index.js",
+      "use": "@vercel/node"
+    },
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist"
+      }
+    }
+  ],
+  "functions": {
+    "api/index.js": {
+      "includeFiles": "backend/database/**"
+    }
+  },
   "rewrites": [
     {
       "source": "/api/(.*)",
@@ -9,6 +27,10 @@
     {
       "source": "/health",
       "destination": "/api/index.js"
+    },
+    {
+      "source": "/((?!api/|health).*)",
+      "destination": "/index.html"
     }
   ]
 }

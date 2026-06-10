@@ -1,5 +1,4 @@
 const mysql = require('mysql2/promise');
-const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const fs = require('fs');
 
@@ -41,15 +40,17 @@ async function initDb() {
 
 function setupSqlite() {
   dbType = 'sqlite';
+  const sqlite3 = require('sqlite3').verbose();
   // Use /tmp directory if running under Vercel serverless environment (read-only filesystem)
   const dbDir = process.env.VERCEL ? '/tmp' : path.join(__dirname, '..');
   const dbPath = path.join(dbDir, 'begin_upsc.sqlite');
+  console.log(`[DATABASE] Setting up SQLite at path: ${dbPath}`);
   
   sqliteConn = new sqlite3.Database(dbPath, (err) => {
     if (err) {
-      console.error('Failed to create SQLite database:', err.message);
+      console.error('[DATABASE] Failed to create SQLite database:', err.message);
     } else {
-      console.log('Connected to SQLite database at:', dbPath);
+      console.log('[DATABASE] Connected to SQLite database at:', dbPath);
     }
   });
 }
@@ -97,11 +98,22 @@ async function query(sql, params = []) {
 async function executeSchema() {
   try {
     const filename = dbType === 'sqlite' ? 'schema.sqlite.sql' : 'schema.sql';
-    const schemaPath = path.join(__dirname, '..', 'database', filename);
+    let schemaPath = path.join(__dirname, '..', 'database', filename);
+    
+    // Fallback paths for Vercel bundling and workspace path variants
     if (!fs.existsSync(schemaPath)) {
-      console.warn('Schema file not found at:', schemaPath);
+      schemaPath = path.join(process.cwd(), 'backend', 'database', filename);
+    }
+    if (!fs.existsSync(schemaPath)) {
+      schemaPath = path.join(process.cwd(), 'database', filename);
+    }
+    
+    if (!fs.existsSync(schemaPath)) {
+      console.warn(`[DATABASE] Schema file not found at any resolved path (checked: ${path.join(__dirname, '..', 'database', filename)} and ${path.join(process.cwd(), 'backend', 'database', filename)}).`);
       return;
     }
+
+    console.log(`[DATABASE] Executing schema file from path: ${schemaPath}`);
 
     const schemaSql = fs.readFileSync(schemaPath, 'utf8');
 
