@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
+import { API_URL, apiFetch } from '../services/api';
 
 const AuthContext = createContext();
 
@@ -12,8 +13,6 @@ export const AuthProvider = ({ children }) => {
     localStorage.getItem('pledgeAccepted') === 'true'
   );
 
-  const API_URL = 'http://localhost:5000/api';
-
   useEffect(() => {
     if (token) {
       fetchProfile();
@@ -24,11 +23,7 @@ export const AuthProvider = ({ children }) => {
 
   const fetchProfile = async () => {
     try {
-      const res = await fetch(`${API_URL}/auth/profile`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
+      const res = await apiFetch('/auth/profile');
       if (res.ok) {
         const data = await res.json();
         setUser(data.user);
@@ -45,9 +40,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = async (email, password) => {
-    const res = await fetch(`${API_URL}/auth/login`, {
+    const res = await apiFetch('/auth/login', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ email, password })
     });
     const data = await res.json();
@@ -62,9 +56,8 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register = async (username, email, password, role = 'student') => {
-    const res = await fetch(`${API_URL}/auth/register`, {
+    const res = await apiFetch('/auth/register', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ username, email, password, role })
     });
     const data = await res.json();
@@ -96,12 +89,8 @@ export const AuthProvider = ({ children }) => {
   const updateStreak = async () => {
     if (!token) return;
     try {
-      const res = await fetch(`${API_URL}/auth/streak`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        }
+      const res = await apiFetch('/auth/streak', {
+        method: 'POST'
       });
       if (res.ok) {
         const data = await res.json();

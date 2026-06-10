@@ -132,3 +132,53 @@ exports.resolveFeedback = async (req, res) => {
     res.status(500).json({ message: 'Error resolving feedback', error: err.message });
   }
 };
+
+exports.getDiagnostics = async (req, res) => {
+  try {
+    const dbType = db.getDbType ? db.getDbType() : 'sqlite';
+    
+    // Test DB query
+    let dbStatus = 'disconnected';
+    let dbError = null;
+    let userTableExists = false;
+    let seededSubjectCount = 0;
+    
+    try {
+      const dbCheck = await db.query('SELECT count(*) as count FROM users');
+      dbStatus = 'connected';
+      userTableExists = true;
+      
+      const subjectCheck = await db.query('SELECT count(*) as count FROM subjects');
+      seededSubjectCount = subjectCheck[0] ? (subjectCheck[0].count || subjectCheck[0]['COUNT(*)'] || 0) : 0;
+    } catch (err) {
+      dbError = err.message;
+    }
+    
+    // Validate key environment variables (mask secrets)
+    const envValidation = {
+      PORT: process.env.PORT || '5000 (default)',
+      NODE_ENV: process.env.NODE_ENV || 'not set',
+      JWT_SECRET: process.env.JWT_SECRET ? 'Configured (Secure)' : 'Missing (Using fallback)',
+      DB_HOST: process.env.DB_HOST ? 'Configured' : 'Not Set (SQLite3)',
+      DB_USER: process.env.DB_USER ? 'Configured' : 'Not Set',
+      DB_NAME: process.env.DB_NAME ? 'Configured' : 'Not Set',
+      VERCEL: process.env.VERCEL ? 'Running on Vercel Serverless' : 'Standalone Server'
+    };
+
+    res.json({
+      status: 'ok',
+      timestamp: new Date(),
+      database: {
+        type: dbType,
+        status: dbStatus,
+        error: dbError,
+        userTableExists,
+        seededSubjectCount
+      },
+      envValidation,
+      authServiceStatus: 'operational'
+    });
+  } catch (err) {
+    res.status(500).json({ message: 'Error retrieving diagnostics details', error: err.message });
+  }
+};

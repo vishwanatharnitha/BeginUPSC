@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { apiFetch } from '../services/api';
 import { Award, Flame, Star, BookOpen, Clock, AlertCircle, CheckCircle, ChevronRight, Lock, Plus, Calendar, Trash } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function Dashboard({ setCurrentTab }) {
-  const { user, profile, achievements, token, API_URL } = useAuth();
+  const { user, profile, achievements, token } = useAuth();
   const [recentTests, setRecentTests] = useState([]);
   const [completedCount, setCompletedCount] = useState(0);
 
@@ -76,12 +77,12 @@ export default function Dashboard({ setCurrentTab }) {
   const fetchDashboardStats = async () => {
     try {
       // Fetch user's test results
-      const resTests = await fetch(`${API_URL}/tests`);
+      const resTests = await apiFetch('/tests');
       const testList = await resTests.json();
       
       const results = [];
       for (const t of testList) {
-        const resLeader = await fetch(`${API_URL}/tests/${t.id}/leaderboard`);
+        const resLeader = await apiFetch(`/tests/${t.id}/leaderboard`);
         const leaders = await resLeader.json();
         // search if user has scores
         const userRuns = leaders.filter(l => l.username === user.username);
@@ -96,9 +97,7 @@ export default function Dashboard({ setCurrentTab }) {
       setRecentTests(results);
 
       // Fetch completed topics count
-      const resTopics = await fetch(`${API_URL}/topics`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const resTopics = await apiFetch('/topics');
       const topics = await resTopics.json();
       const completed = topics.filter(t => t.completed).length;
       setCompletedCount(completed);

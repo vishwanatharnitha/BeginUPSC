@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { apiFetch } from '../services/api';
 import { Calendar, User, Clock, ArrowRight, CheckCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function Roadmaps() {
-  const { API_URL } = useAuth();
+  const { token } = useAuth();
   const [roadmaps, setRoadmaps] = useState([]);
   const [selectedRoadmap, setSelectedRoadmap] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -21,7 +22,7 @@ export default function Roadmaps() {
   const fetchRoadmaps = async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/roadmaps?audience=${audience}&months=${months}`);
+      const res = await apiFetch(`/roadmaps?audience=${audience}&months=${months}`);
       if (res.ok) {
         const data = await res.json();
         setRoadmaps(data);

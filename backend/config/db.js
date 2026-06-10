@@ -41,7 +41,10 @@ async function initDb() {
 
 function setupSqlite() {
   dbType = 'sqlite';
-  const dbPath = path.join(__dirname, '..', 'begin_upsc.sqlite');
+  // Use /tmp directory if running under Vercel serverless environment (read-only filesystem)
+  const dbDir = process.env.VERCEL ? '/tmp' : path.join(__dirname, '..');
+  const dbPath = path.join(dbDir, 'begin_upsc.sqlite');
+  
   sqliteConn = new sqlite3.Database(dbPath, (err) => {
     if (err) {
       console.error('Failed to create SQLite database:', err.message);

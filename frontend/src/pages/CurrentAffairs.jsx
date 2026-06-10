@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { apiFetch } from '../services/api';
 import { Calendar, Search, Download, FileText, Bell, Globe, Bookmark } from 'lucide-react';
 
 export default function CurrentAffairs() {
-  const { API_URL } = useAuth();
+  const { token } = useAuth();
   const [articles, setArticles] = useState([]);
   const [compilations, setCompilations] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -34,8 +35,7 @@ export default function CurrentAffairs() {
   const fetchArticles = async () => {
     setLoading(true);
     try {
-      const url = `${API_URL}/current-affairs?category=${category}&search=${search}`;
-      const res = await fetch(url);
+      const res = await apiFetch(`/current-affairs?category=${category}&search=${search}`);
       if (res.ok) {
         const data = await res.json();
         setArticles(data);
@@ -53,7 +53,7 @@ export default function CurrentAffairs() {
 
   const fetchCompilations = async () => {
     try {
-      const res = await fetch(`${API_URL}/current-affairs/pdf-compilations`);
+      const res = await apiFetch('/current-affairs/pdf-compilations');
       if (res.ok) {
         const data = await res.json();
         setCompilations(data);

@@ -1,9 +1,10 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { apiFetch } from '../services/api';
 import { Send, Bot, User, HelpCircle, Loader2 } from 'lucide-react';
 
 export default function AIAssistant() {
-  const { API_URL } = useAuth();
+  const { token } = useAuth();
   const [messages, setMessages] = useState([
     {
       sender: 'bot',
@@ -55,9 +56,8 @@ export default function AIAssistant() {
     setLoading(true);
 
     try {
-      const res = await fetch(`${API_URL}/ai/chat`, {
+      const res = await apiFetch('/ai/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ message: queryText, mode })
       });
 

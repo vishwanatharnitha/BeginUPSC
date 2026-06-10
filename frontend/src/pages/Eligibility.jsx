@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { apiFetch } from '../services/api';
 import { ShieldCheck, ShieldAlert, Award, Calendar, HelpCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function Eligibility() {
-  const { API_URL } = useAuth();
+  const { token } = useAuth();
   
   // Form Fields
   const [age, setAge] = useState('21');
@@ -25,9 +26,8 @@ export default function Eligibility() {
     setResult(null);
 
     try {
-      const res = await fetch(`${API_URL}/eligibility/check`, {
+      const res = await apiFetch('/eligibility/check', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           age,
           category,

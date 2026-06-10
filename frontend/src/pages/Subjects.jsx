@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { apiFetch } from '../services/api';
 import { BookOpen, CheckCircle, FileText, ChevronRight, HelpCircle, Lock, Award } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Subjects() {
-  const { token, API_URL, refreshUserData } = useAuth();
+  const { token, refreshUserData } = useAuth();
   const [subjects, setSubjects] = useState([]);
   const [selectedSubject, setSelectedSubject] = useState(null);
   const [topics, setTopics] = useState([]);
@@ -27,7 +28,7 @@ export default function Subjects() {
 
   const fetchSubjects = async () => {
     try {
-      const res = await fetch(`${API_URL}/subjects`);
+      const res = await apiFetch('/subjects');
       if (res.ok) {
         const data = await res.json();
         setSubjects(data);
@@ -51,11 +52,7 @@ export default function Subjects() {
   const fetchTopics = async (subjectId) => {
     setLoading(true);
     try {
-      const headers = {};
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-      const res = await fetch(`${API_URL}/topics?subjectId=${subjectId}`, { headers });
+      const res = await apiFetch(`/topics?subjectId=${subjectId}`);
       if (res.ok) {
         const data = await res.json();
         setTopics(data);
@@ -99,12 +96,8 @@ export default function Subjects() {
     }
 
     try {
-      const res = await fetch(`${API_URL}/topics/${topicId}/progress`, {
+      const res = await apiFetch(`/topics/${topicId}/progress`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
         body: JSON.stringify({ completed: !currentStatus })
       });
 

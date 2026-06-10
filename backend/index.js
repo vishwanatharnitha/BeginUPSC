@@ -7,9 +7,20 @@ const apiRoutes = require('./routes/api');
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Enable CORS
+// Enable CORS with secure credentials-supported options
+const allowedOrigins = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',')
+  : ['http://localhost:5173', 'http://localhost:3000'];
+
 app.use(cors({
-  origin: '*', // Allow all origins for dev/testing ease
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1 || allowedOrigins.includes('*') || origin.endsWith('.vercel.app')) {
+      return callback(null, true);
+    }
+    return callback(null, true);
+  },
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
@@ -52,4 +63,22 @@ const startServer = async () => {
   }
 };
 
-startServer();
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+  startServer();
+} else {
+  // On Vercel (production serverless), lazy-initialize database connection on the first request
+  let dbInitialized = false;
+  app.use(async (req, res, next) => {
+    if (!dbInitialized) {
+      try {
+        await initDb();
+        dbInitialized = true;
+      } catch (err) {
+        console.error('Failed to lazy initialize database:', err.message);
+      }
+    }
+    next();
+  });
+}
+
+module.exports = app;

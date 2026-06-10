@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { apiFetch } from '../services/api';
 import { useLanguage } from '../context/LanguageContext';
 import { MessageSquare, Star, Send, CheckCircle2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Feedback() {
-  const { token, API_URL } = useAuth();
+  const { token } = useAuth();
   const { t } = useLanguage();
 
   const [type, setType] = useState('suggestion');
@@ -20,16 +21,8 @@ export default function Feedback() {
     setSuccessMsg('');
 
     try {
-      const headers = {
-        'Content-Type': 'application/json'
-      };
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
-      }
-
-      const res = await fetch(`${API_URL}/feedback`, {
+      const res = await apiFetch('/feedback', {
         method: 'POST',
-        headers,
         body: JSON.stringify({ type, content, rating })
       });
 

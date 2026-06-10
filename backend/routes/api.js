@@ -121,5 +121,6 @@ router.post('/admin/current-affairs', protect, adminOnly, adminController.addCur
 router.delete('/admin/posts/:id', protect, adminOnly, adminController.deletePost);
 router.get('/admin/feedback', protect, adminOnly, feedbackController.getAllFeedback);
 router.put('/admin/feedback/:id', protect, adminOnly, adminController.resolveFeedback);
+router.get('/admin/diagnostics', protect, adminOnly, adminController.getDiagnostics);
 
 module.exports = router;

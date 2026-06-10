@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { apiFetch } from '../services/api';
 import { MessageSquare, Heart, CornerDownRight, User, PlusCircle, AlertCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function Community() {
-  const { token, API_URL, refreshUserData, user } = useAuth();
+  const { token, refreshUserData, user } = useAuth();
   const [posts, setPosts] = useState([]);
   const [selectedPost, setSelectedPost] = useState(null);
   const [comments, setComments] = useState([]);
@@ -40,8 +41,7 @@ export default function Community() {
   const fetchPosts = async () => {
     setLoading(true);
     try {
-      const url = `${API_URL}/forum/posts?category=${category}&search=${searchQuery}`;
-      const res = await fetch(url);
+      const res = await apiFetch(`/forum/posts?category=${category}&search=${searchQuery}`);
       if (res.ok) {
         const data = await res.json();
         setPosts(data);
@@ -59,7 +59,7 @@ export default function Community() {
 
   const fetchPostDetails = async (post) => {
     try {
-      const res = await fetch(`${API_URL}/forum/posts/${post.id}`);
+      const res = await apiFetch(`/forum/posts/${post.id}`);
       if (res.ok) {
         const data = await res.json();
         setSelectedPost(data.post);
@@ -92,12 +92,8 @@ export default function Community() {
     if (!token || !selectedPost) return;
 
     try {
-      const res = await fetch(`${API_URL}/forum/posts/${selectedPost.id}`, {
+      const res = await apiFetch(`/forum/posts/${selectedPost.id}`, {
         method: 'PUT',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
         body: JSON.stringify({ title: editTitle, content: editContent, category: editCategory })
       });
 
@@ -116,11 +112,8 @@ export default function Community() {
     if (!window.confirm('Are you sure you want to delete this thread?')) return;
 
     try {
-      const res = await fetch(`${API_URL}/forum/posts/${selectedPost.id}`, {
-        method: 'DELETE',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const res = await apiFetch(`/forum/posts/${selectedPost.id}`, {
+        method: 'DELETE'
       });
 
       if (res.ok) {
@@ -138,12 +131,8 @@ export default function Community() {
     if (!token) return;
 
     try {
-      const res = await fetch(`${API_URL}/forum/posts`, {
+      const res = await apiFetch(`/forum/posts`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
         body: JSON.stringify({ title, content, category: postCategory })
       });
 
@@ -164,12 +153,8 @@ export default function Community() {
     if (!token || !commentContent) return;
 
     try {
-      const res = await fetch(`${API_URL}/forum/comments`, {
+      const res = await apiFetch(`/forum/comments`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
         body: JSON.stringify({ postId: selectedPost.id, content: commentContent })
       });
 

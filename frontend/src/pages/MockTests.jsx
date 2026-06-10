@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { apiFetch } from '../services/api';
 import { Clock, ShieldAlert, Award, ArrowRight, HelpCircle, Check, X, BookOpen } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function MockTests() {
-  const { token, API_URL, refreshUserData } = useAuth();
+  const { token, refreshUserData } = useAuth();
   const [tests, setTests] = useState([]);
   const [activeTest, setActiveTest] = useState(null);
   const [questions, setQuestions] = useState([]);
@@ -40,9 +41,7 @@ export default function MockTests() {
   const fetchAttempts = async () => {
     setLoadingAttempts(true);
     try {
-      const res = await fetch(`${API_URL}/tests/attempts`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const res = await apiFetch('/tests/attempts');
       if (res.ok) {
         const data = await res.json();
         setAttempts(data);
@@ -57,9 +56,7 @@ export default function MockTests() {
   const fetchAnalytics = async () => {
     setLoadingAnalytics(true);
     try {
-      const res = await fetch(`${API_URL}/tests/analytics`, {
-        headers: { 'Authorization': `Bearer ${token}` }
-      });
+      const res = await apiFetch('/tests/analytics');
       if (res.ok) {
         const data = await res.json();
         setAnalytics(data);
@@ -73,7 +70,7 @@ export default function MockTests() {
 
   const fetchLeaderboard = async (testId) => {
     try {
-      const res = await fetch(`${API_URL}/tests/${testId}/leaderboard`);
+      const res = await apiFetch(`/tests/${testId}/leaderboard`);
       if (res.ok) {
         const data = await res.json();
         setLeaderboard(data);
@@ -99,7 +96,7 @@ export default function MockTests() {
 
   const fetchTests = async () => {
     try {
-      const res = await fetch(`${API_URL}/tests`);
+      const res = await apiFetch('/tests');
       if (res.ok) {
         const data = await res.json();
         setTests(data);
@@ -121,7 +118,7 @@ export default function MockTests() {
     
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/tests/${test.id}`);
+      const res = await apiFetch(`/tests/${test.id}`);
       if (res.ok) {
         const data = await res.json();
         setActiveTest(data.test);
@@ -178,12 +175,8 @@ export default function MockTests() {
     setTestActive(false);
     setLoading(true);
     try {
-      const res = await fetch(`${API_URL}/tests/${activeTest.id}/submit`, {
+      const res = await apiFetch(`/tests/${activeTest.id}/submit`, {
         method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
         body: JSON.stringify({ answers })
       });
 

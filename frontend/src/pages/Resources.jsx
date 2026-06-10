@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { apiFetch } from '../services/api';
 import { Search, Download, FileText, BookOpen, Layers, X, Eye } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Resources() {
-  const { API_URL } = useAuth();
+  const { token } = useAuth();
   const [resources, setResources] = useState([]);
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('');
@@ -27,8 +28,7 @@ export default function Resources() {
   const fetchResources = async () => {
     setLoading(true);
     try {
-      const url = `${API_URL}/resources?category=${category}&search=${search}`;
-      const res = await fetch(url);
+      const res = await apiFetch(`/resources?category=${category}&search=${search}`);
       if (res.ok) {
         const data = await res.json();
         setResources(data);

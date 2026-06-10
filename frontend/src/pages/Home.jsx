@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useLanguage } from '../context/LanguageContext';
 import { useAuth } from '../context/AuthContext';
+import { apiFetch } from '../services/api';
 import { BookOpen, CheckCircle, ArrowRight, ShieldCheck, HelpCircle, Trophy, Bell, Flame } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function Home({ setCurrentTab }) {
   const { t } = useLanguage();
-  const { token, API_URL } = useAuth();
+  const { token } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [stats, setStats] = useState({ students: 12450, tests: 45, submissions: 8200 });
 
@@ -17,7 +18,7 @@ export default function Home({ setCurrentTab }) {
 
   const fetchNotifications = async () => {
     try {
-      const res = await fetch(`${API_URL}/notifications`);
+      const res = await apiFetch('/notifications');
       if (res.ok) {
         const data = await res.json();
         setNotifications(data);
@@ -33,7 +34,7 @@ export default function Home({ setCurrentTab }) {
 
   const fetchSystemStats = async () => {
     try {
-      const res = await fetch(`${API_URL}/admin/stats`);
+      const res = await apiFetch('/admin/stats');
       if (res.ok) {
         const data = await res.json();
         setStats(data);
