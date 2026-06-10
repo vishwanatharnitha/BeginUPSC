@@ -72,9 +72,11 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 // Test check route
-app.get('/health', (req, res) => {
+const healthCheck = (req, res) => {
   res.json({ status: 'ok', time: new Date() });
-});
+};
+app.get('/health', healthCheck);
+app.get('/api/health', healthCheck);
 
 // Bind API routes
 app.use('/api', apiRoutes);

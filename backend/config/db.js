@@ -40,19 +40,34 @@ async function initDb() {
 
 function setupSqlite() {
   dbType = 'sqlite';
-  const sqlite3 = require('sqlite3').verbose();
-  // Use /tmp directory if running under Vercel serverless environment (read-only filesystem)
-  const dbDir = process.env.VERCEL ? '/tmp' : path.join(__dirname, '..');
-  const dbPath = path.join(dbDir, 'begin_upsc.sqlite');
-  console.log(`[DATABASE] Setting up SQLite at path: ${dbPath}`);
-  
-  sqliteConn = new sqlite3.Database(dbPath, (err) => {
-    if (err) {
-      console.error('[DATABASE] Failed to create SQLite database:', err.message);
-    } else {
-      console.log('[DATABASE] Connected to SQLite database at:', dbPath);
-    }
-  });
+  try {
+    const sqlite3 = require('sqlite3').verbose();
+    // Use /tmp directory if running under Vercel serverless environment (read-only filesystem)
+    const dbDir = process.env.VERCEL ? '/tmp' : path.join(__dirname, '..');
+    const dbPath = path.join(dbDir, 'begin_upsc.sqlite');
+    console.log(`[DATABASE] Setting up SQLite at path: ${dbPath}`);
+    
+    sqliteConn = new sqlite3.Database(dbPath, (err) => {
+      if (err) {
+        console.error('[DATABASE] Failed to create SQLite database:', err.message);
+      } else {
+        console.log('[DATABASE] Connected to SQLite database at:', dbPath);
+      }
+    });
+  } catch (err) {
+    console.error('[DATABASE CRITICAL] Failed to load sqlite3 module on Vercel serverless:', err.message);
+    console.warn('[DATABASE] Falling back to memory-mock database queries to prevent process crash. Persistent database requires MySQL configuration on Vercel.');
+    sqliteConn = {
+      all: (sql, params, callback) => {
+        console.warn('[DATABASE MOCK] Intercepted sqliteConn.all query:', sql);
+        callback(null, []);
+      },
+      run: function(sql, params, callback) {
+        console.warn('[DATABASE MOCK] Intercepted sqliteConn.run query:', sql);
+        callback.call({ lastID: 1, changes: 0 }, null);
+      }
+    };
+  }
 }
 
 async function query(sql, params = []) {
