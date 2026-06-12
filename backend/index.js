@@ -108,8 +108,11 @@ const startServer = async () => {
   }
 };
 
+// Keep your local server running for development
 if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
   startServer();
 }
 
+// CRUCIAL: Export app for Vercel Serverless Functions
 module.exports = app;
+
