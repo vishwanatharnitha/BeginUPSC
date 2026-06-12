@@ -7,19 +7,29 @@ let mysqlPool = null;
 let sqliteConn = null;
 
 async function initDb() {
-  const useMysql = process.env.DB_HOST && process.env.DB_USER && process.env.DB_NAME;
+  // Check for either separate variables OR your single Railway connection URL string
+  const useMysql = (process.env.DB_HOST && process.env.DB_USER && process.env.DB_NAME) || process.env.MYSQL_URL || process.env.MYSQL_PUBLIC_URL;
 
   if (useMysql) {
     try {
-      mysqlPool = mysql.createPool({
-        host: process.env.DB_HOST,
-        user: process.env.DB_USER,
-        password: process.env.DB_PASSWORD,
-        database: process.env.DB_NAME,
-        waitForConnections: true,
-        connectionLimit: 10,
-        queueLimit: 0
-      });
+      const connectionString = process.env.MYSQL_URL || process.env.MYSQL_PUBLIC_URL;
+      
+      if (connectionString) {
+        // If you are using the single Railway URL string
+        mysqlPool = mysql.createPool(connectionString);
+      } else {
+        // Fallback if using separate fields
+        mysqlPool = mysql.createPool({
+          host: process.env.DB_HOST,
+          user: process.env.DB_USER,
+          password: process.env.DB_PASSWORD,
+          database: process.env.DB_NAME,
+          waitForConnections: true,
+          connectionLimit: 10,
+          queueLimit: 0
+        });
+      }
+      
       // Test connection
       const conn = await mysqlPool.getConnection();
       console.log('Successfully connected to MySQL database.');
@@ -33,6 +43,10 @@ async function initDb() {
     console.log('No MySQL config found in environment. Initializing SQLite3 database.');
     setupSqlite();
   }
+
+  // Load and execute schema
+  await executeSchema();
+}
 
   // Load and execute schema
   await executeSchema();
