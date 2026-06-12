@@ -136,7 +136,16 @@ async function executeSchema() {
     const queries = schemaSql
       .split(';')
       .map(q => q.trim())
-      .filter(q => q.length > 0);
+      .filter(q => q.length > 0)
+      .filter(q => {
+        const upper = q.toUpperCase();
+        // Skip database creation and selection statements since connection pool manages it
+        const shouldSkip = upper.startsWith('CREATE DATABASE') || upper.startsWith('USE ');
+        if (shouldSkip) {
+          console.log(`[DATABASE] Skipping query (managed by connection pool): ${q}`);
+        }
+        return !shouldSkip;
+      });
 
     for (const q of queries) {
       try {
