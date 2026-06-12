@@ -130,6 +130,29 @@ async function executeSchema() {
 
     console.log(`[DATABASE] Executing schema file from path: ${schemaPath}`);
 
+    // If MySQL, check if the 'users' table is malformed (e.g., created empty without the right columns)
+    if (dbType === 'mysql') {
+      try {
+        const columns = await query("SHOW COLUMNS FROM users");
+        const hasPasswordHash = columns.some(col => col.Field === 'password_hash');
+        if (!hasPasswordHash) {
+          console.log("[DATABASE] Malformed 'users' table found (missing 'password_hash' column). Dropping table to allow proper schema creation.");
+          // Drop dependent tables in reverse FK order
+          await query("DROP TABLE IF EXISTS profiles");
+          await query("DROP TABLE IF EXISTS progress");
+          await query("DROP TABLE IF EXISTS results");
+          await query("DROP TABLE IF EXISTS forum_posts");
+          await query("DROP TABLE IF EXISTS comments");
+          await query("DROP TABLE IF EXISTS feedback");
+          await query("DROP TABLE IF EXISTS achievements");
+          await query("DROP TABLE IF EXISTS users");
+        }
+      } catch (err) {
+        // Table 'users' doesn't exist or is empty, which is expected for fresh databases
+        console.log("[DATABASE] 'users' table check completed: " + err.message);
+      }
+    }
+
     const schemaSql = fs.readFileSync(schemaPath, 'utf8');
 
     // Split queries by semicolon and execute them sequentially
